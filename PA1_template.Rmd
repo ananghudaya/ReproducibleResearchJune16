@@ -1,0 +1,113 @@
+---
+title: "Reproducible Research"
+author: "Anang Hudaya Muhamad Amin"
+date: "23 June 2016"
+output: html_document
+---
+## Course Project 1
+
+### Loading and preprocessing the data
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path='Figs/')
+```
+
+
+
+The following code is used to load the data from the csv file into variable *fitdata* and to convert the Date format:
+
+```{r load}
+fitdata = read.csv("activity.csv")  # read csv file
+fitdata$date <- as.Date(fitdata$date)
+str(fitdata)
+
+```
+
+### What is mean total number of steps taken per day?
+
+The total no. of steps taken per day can be retrieved using the following code:
+
+```{r total}
+library(plyr)
+sumFit <- ddply(fitdata, c("date"), summarise, sum = sum(!is.na(steps)))
+show(sumFit)
+hist(sumFit$sum, main="Total No. of Steps vs. No. of Days",     xlab="No. of Steps", ylab = "No. of Days")
+```
+
+The mean and median of the total number of steps taken per day:
+
+```{r meanmedian}
+mmFit <- ddply(fitdata, c("date"), summarise, mean = mean(steps, na.rm = TRUE), median = median(steps, na.rm = TRUE))
+show(mmFit)
+```
+
+## What is the average daily activity pattern?
+
+Time series plot could be developed using the following code:
+
+```{r average}
+avgFit <- ddply(fitdata, c("interval"), summarise, avg = mean(steps, na.rm = TRUE))
+plot(avgFit$interval, avgFit$avg, type = "l", main="Average No. of Steps per 5-Minute Intervals", xlab = "5-minute interval", ylab = "Average no. of steps")
+```
+
+The 5-minute interval,that contains the maximum number of steps:
+
+```{r maxstep}
+avgFit$interval[which.max(apply(avgFit, MARGIN = 1,min))]
+```
+
+## Imputing missing values
+
+The following lines of codes are used to calculate and report the total number of missing values in the dataset:
+
+```{r missing}
+for (Var in names(fitdata)) {
+    miss <- sum(is.na(fitdata[,Var]))
+    if (miss > 0) {
+        print(c(Var,miss))
+    }
+}
+```
+
+Creating a new dataset from *fitdata* with a filled-up missing values in the dataset using mean:
+
+```{r fill}
+fitfill <- fitdata[1:3]
+fitfill$steps[is.na(fitfill$steps)] = mean(fitfill$steps, na.rm = TRUE)
+str(fitfill)
+
+```
+
+Create a new histogram with filled dataset:
+
+```{r fillhisto}
+sumFillFit <- ddply(fitfill, c("date"), summarise, sum1 = sum(!is.na(steps)))
+hist(sumFillFit$sum1, main="Total No. of Steps vs. No. of Days",     xlab="No. of Steps", ylab = "No. of Days")
+```
+
+The mean and median of the total number of steps taken per day:
+
+```{r mmFill}
+mmFillFit <- ddply(fitfill, c("date"), summarise, mean = mean(steps, na.rm = TRUE), median = median(steps, na.rm = TRUE))
+show(mmFillFit)
+```
+
+From the histogram, mean, and median values, it is noted that the values are different. The total no. of steps have been increased to 288 and consistent throughout all dates. Mean and median values of empty data are changing accordingly.
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+The following codes are used to generate the plots to differentiate activity patterns between weekdays and weekends:
+
+```{r dates}
+wd <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
+fitfill$day <- c('weekend', 'weekday')[(weekdays(fitfill$date) %in% wd)+1L]
+avgFillFit <- ddply(fitfill, c("interval", "day"), summarise, avg = mean(steps, na.rm = TRUE))
+library(lattice) 
+attach(fitfill)
+
+xyplot(avg~interval | day, avgFillFit, type = "l",
+  	main="Activity patterns between Weekdays and Weekends", 
+   ylab="Average no. of steps", xlab="5-minute interval")
+```
+
+**END OF PROJECT**
