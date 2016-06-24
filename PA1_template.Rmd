@@ -2,7 +2,7 @@
 title: "Reproducible Research"
 author: "Anang Hudaya Muhamad Amin"
 date: "23 June 2016"
-output: html_document
+output: md_document
 ---
 ## Course Project 1
 
